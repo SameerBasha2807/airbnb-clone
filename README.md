@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Airbnb Listing Page Clone
+A pixel-focused clone of an Airbnb listing page built with Next.js,reproducing the listing view plus two overlays: the full-screen Photo Tourand the Lightbox photo viewer.
 
-## Getting Started
+Live Demo
+https://airbnb-clone-pi-bay-67.vercel.app
 
-First, run the development server:
+Views
+Listing Page — hero gallery, booking card with live pricing,two-month calendar with date-range picking, amenities modal, reviewsmodal, sticky section nav, Save/Share toasts.
+Photo Tour — full-page scrollable gallery synced to?modal=PHOTO_TOUR_SCROLLABLE; room thumbnails smooth-scroll tosections; browser Back closes it.
+Lightbox — single-photo viewer over the tour with prev/nextarrows, keyboard ←/→ navigation, wrap-around, Esc to close, andfocus restore.
+Tech Stack
+Next.js (App Router) + TypeScript
+Tailwind CSS v4 (@theme tokens, no config file)
+Custom SVG icons (no icon libraries)
+Data layer with derived counts (data/listing.ts)
+Run Locally
+npm installnpm run dev
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+open http://localhost:3000
+Build
+npm run build && npm start
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Accessibility
+All overlays: role="dialog", aria-modal, Esc to close, focus moves in onopen and restores on close, body scroll lock (refcounted for stackedoverlays), keyboard paths throughout.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+AI Workflow
+Human-led, AI-assisted development. Prompt log: docs/ai-prompts.md.Sub-agent configs: .claude/agents/. Agent directives: AGENTS.md.Project conventions: CLAUDE.md.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Architecture
+Production-scale system design: docs/architecture.png.

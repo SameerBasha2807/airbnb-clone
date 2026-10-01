@@ -1,69 +1,141 @@
-import Image from "next/image";
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Header from "@/components/Header";
+import PhotoGallery from "@/components/PhotoGallery";
+import ListingBody from "@/components/ListingBody";
+import BookingCard, { PromoBanner } from "@/components/BookingCard";
+import CalendarSection, { type DateRange } from "@/components/CalendarSection";
+import Reviews from "@/components/Reviews";
+import ReviewsModal from "@/components/ReviewsModal";
+import MapSection from "@/components/MapSection";
+import ThingsToKnow from "@/components/ThingsToKnow";
+import Footer from "@/components/Footer";
+import PhotoTour from "@/components/PhotoTour";
+import Lightbox from "@/components/Lightbox";
+import StickyNav from "@/components/StickyNav";
+import AmenitiesModal from "@/components/AmenitiesModal";
+import ReserveModal from "@/components/ReserveModal";
+import Toast from "@/components/Toast";
+import { Heart, Share,Star } from "@/components/Icons";
+import { allPhotos, listing } from "@/data/listing";
+import { nightsBetween } from "@/lib/dates";
 
-export default function Home() {
+const DEFAULT_RANGE: DateRange = { start: new Date(2026, 9, 18), end: new Date(2026, 9, 23) };
+
+export default function Page() {
+  const [range, setRange] = useState<DateRange>(DEFAULT_RANGE);
+  const [guests, setGuests] = useState(2);
+  const [saved, setSaved] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [amenitiesOpen, setAmenitiesOpen] = useState(false);
+  const [reserveOpen, setReserveOpen] = useState(false);
+  const [reviewsOpen, setReviewsOpen] = useState(false);
+  const [promoClaimed, setPromoClaimed] = useState(false);
+
+  const nights = nightsBetween(range.start, range.end);
+  const discount = promoClaimed && nights > 0
+    ? Math.round(listing.pricePerNight * nights * 0.1)
+    : 0;
+  const total = nights > 0 ? listing.pricePerNight * nights + listing.cleaningFee - discount : 0;
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  const toggleSave = useCallback(() => {
+    setSaved((s) => {
+      if (!s) showToast("Saved to wishlist");
+      return !s;
+    });
+  }, [showToast]);
+
+  const handleShare = useCallback(() => {
+    navigator.clipboard?.writeText(window.location.href).catch(() => {});
+    showToast("Link copied");
+  }, [showToast]);
+
+  // Photo tour <-> URL (?modal=PHOTO_TOUR_SCROLLABLE), browser back closes it
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("modal") === "PHOTO_TOUR_SCROLLABLE") setTourOpen(true);
+  }, []);
+  useEffect(() => {
+    if (tourOpen) window.history.pushState({ tour: true }, "", "?modal=PHOTO_TOUR_SCROLLABLE");
+  }, [tourOpen]);
+  useEffect(() => {
+    const onPop = () => setTourOpen(false);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  const closeTour = useCallback(() => {
+    if (window.history.state?.tour) window.history.back();
+    else setTourOpen(false);
+  }, []);
+
+  const navLightbox = useCallback((delta: number) => {
+    setLightboxIndex((i) => (i === null ? 0 : (i + delta + allPhotos.length) % allPhotos.length));
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <Header />
+      <main className="mx-auto max-w-[1280px] px-10 pb-16">
+        <div id="photos" className="scroll-mt-24 pt-4">
+          <div className="flex items-start justify-between gap-4 pb-4">
+            <h1 className="text-2xl font-semibold">{listing.title}</h1>
+            <div className="flex shrink-0 gap-2 pt-1">
+              <button onClick={handleShare} className="flex items-center gap-1.5 rounded-lg p-2 text-sm font-semibold underline transition hover:bg-gray-100">
+                <Share className="h-4 w-4" /> Share
+              </button>
+              <button onClick={toggleSave} aria-pressed={saved}
+                className="flex items-center gap-1.5 rounded-lg p-2 text-sm font-semibold underline transition hover:bg-gray-100">
+                <Heart className={`h-4 w-4 ${saved ? "text-rausch" : ""}`} filled={saved} />
+                {saved ? "Saved" : "Save"}
+              </button>
+            </div>
+          </div>
+          <PhotoGallery onOpen={() => setTourOpen(true)} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="mt-6 grid grid-cols-[1fr_372px] gap-x-16">
+          <div className="border-r border-line pr-16">
+            <ListingBody onShowAllAmenities={() => setAmenitiesOpen(true)} />
+            <CalendarSection range={range} onChange={setRange} />
+          </div>
+          <div>
+            <div className="sticky top-6">
+              <PromoBanner claimed={promoClaimed}
+                onClaim={() => { setPromoClaimed(true); showToast("Coupon claimed — 10% off your next stay"); }} />
+              <BookingCard range={range} guests={guests} setGuests={setGuests}
+                nights={nights} total={total} discount={discount}
+                onOpenReserve={() => setReserveOpen(true)} />
+            </div>
+          </div>
         </div>
+
+        <hr className="my-8 border-line" />
+        <div id="reviews" className="scroll-mt-24"><Reviews onShowAll={() => setReviewsOpen(true)} /></div>
+        <div id="location" className="scroll-mt-24"><MapSection /></div>
+        <ThingsToKnow />
       </main>
-    </div>
+      <Footer />
+
+      <StickyNav nights={nights} total={total} onReserve={() => setReserveOpen(true)} />
+      <PhotoTour open={tourOpen} suspended={lightboxIndex !== null} saved={saved}
+        onClose={closeTour} onOpenLightbox={(i) => setLightboxIndex(i)}
+        onToggleSave={toggleSave} onShare={handleShare} />
+      <Lightbox index={lightboxIndex} onClose={() => setLightboxIndex(null)} onNav={navLightbox} />
+      <AmenitiesModal open={amenitiesOpen} onClose={() => setAmenitiesOpen(false)} />
+      <ReserveModal open={reserveOpen} onClose={() => setReserveOpen(false)}
+        start={range.start} end={range.end} guests={guests} nights={nights} total={total}
+        discount={discount}
+        onConfirm={() => { setReserveOpen(false); showToast("Request sent to Mirashya Homes"); }} />
+      <ReviewsModal open={reviewsOpen} onClose={() => setReviewsOpen(false)} />
+      {toast && <Toast message={toast} />}
+    </>
   );
 }

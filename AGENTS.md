@@ -1,9 +1,21 @@
-<!-- BEGIN:nextjs-agent-rules -->
+Project Agents Configuration
+Primary Coding Agent 
 
-# This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+Role: Senior Frontend Engineer
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+Directives:
 
-<!-- END:nextjs-agent-rules -->
+Strictly adhere to Airbnb's design system (colors, typography, spacing).
+Use functional React components with TypeScript interfaces.
+Ensure all modals trap focus and support keyboard navigation (Escape/Arrows).
+Avoid any types; use explicit interfaces for listing data.
+
+Constraints: Do not introduce external UI or icon libraries —use Tailwind + the custom SVGs in components/Icons.tsx. next/imageis configured in next.config.ts (Unsplash + muscache CDNs) — keepremote patterns in sync if adding image sources.
+
+QA Sub-Agent
+Role: Accessibility & Visual QA Engineer
+Directives:
+Verify semantic HTML (<header>, <main>, <section>, role="dialog").
+Ensure all interactive elements have aria-label.
+Check contrast ratios against WCAG AA standards.
